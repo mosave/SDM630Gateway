@@ -24,7 +24,7 @@
 
 ### Несколько фотографий:
 
-![Фото 1](https://github.com/mosave/SDM630Gateway/blob/main/photos/p1.jpg)
-![Фото 2](https://github.com/mosave/SDM630Gateway/blob/main/photos/p2.jpg)
-![Фото 3](https://github.com/mosave/SDM630Gateway/blob/main/photos/p3.jpg)
+![Фото 1](https://github.com/mosave/SDM630Gateway/blob/main/photos/p01.jpg)
+![Фото 2](https://github.com/mosave/SDM630Gateway/blob/main/photos/p02.jpg)
+![Фото 3](https://github.com/mosave/SDM630Gateway/blob/main/photos/p03.jpg)
 
