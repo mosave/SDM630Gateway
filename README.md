@@ -18,7 +18,8 @@
 
 Header1 | Description2
 --------|-------------
-![Схема](/mosave/SDM630Gateway/blob/main/photos/diagram.jpg) | Description
+![Схема](https://github.com/mosave/SDM630Gateway/blob/main/photos/diagram.jpg) | Description
+
 
 ### Схема подключения
 
