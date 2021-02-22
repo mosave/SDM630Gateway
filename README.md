@@ -2,7 +2,7 @@
 
 ## MQTT интерфейс на шину Modbus на примере электросчетчика Eastron SDM630
 
-Проект построен на основе [AE' ESP8266 IoT Framework](https://github.com/mosave/AELib) с использованием следующих библиотек:
+Прошивка собрана на основе [AE' ESP8266 IoT Framework](https://github.com/mosave/AELib) с использованием следующих библиотек:
  * [PubSubClient by Nick O'Leary](https://github.com/knolleary/pubsubclient): MQTT клиент
  * [modbus-esp8266 by Alexander Emelianov](https://github.com/emelianov/modbus-esp8266): Взаимодействие с Modbus шиной
  * Другие библиотеки в составе Arduino ESP8266 SDK
@@ -18,9 +18,8 @@
 
 ### "Принципиальная схема" :sunglasses:
 
-Обратите внимание: кнопка и XH2.54 разъем, на который выведены D5, D6 и D7 **не нужны** и добавлены "на всякий случай, 
-вдруг пригодится".
-В репозитории есть 2 модели корпуса для печати: с местом под разъем XH и без него.
+Обратите внимание: кнопка и разъем XH2.54, на который выведены D5, D6 и D7 **не нужны** и добавлены "на всякий случай, 
+вдруг пригодится". В репозитории есть 2 модели корпуса для печати: с местом под разъем XH и без него.
 
 ![Схема](https://github.com/mosave/SDM630Gateway/blob/main/photos/diagram.jpg)
 
