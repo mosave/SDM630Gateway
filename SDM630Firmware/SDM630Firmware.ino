@@ -27,13 +27,13 @@ void mqttConnect() {
 }
 
 bool mqttCallback(char* topic, byte* payload, unsigned int length) {
-  //Serial.printf("mqttCallback(\"%s\", %u, %u )\r\n", topic, payload, length);
+  //printf("mqttCallback(\"%s\", %u, %u )\r\n", topic, payload, length);
   return false;
 }
 
 void publishVal( char* Topic, char* _value, char* value, bool retained=false) {
   if( (strcmp( _value, value) != 0 ) && mqttPublish( Topic, value, retained ) ) {
-    //Serial.print(_value ); Serial.print(" != "); Serial.println(value);
+    //print(_value ); print(" != "); println(value);
       strcpy( _value, value );
   }
   
@@ -85,7 +85,7 @@ void setup() {
   ledInit( On );
   Serial.begin(115200);
   delay(500); 
-  Serial.println();  Serial.println("Initializing");
+  println();  println("Initializing");
 
   storageInit();
   commsInit();

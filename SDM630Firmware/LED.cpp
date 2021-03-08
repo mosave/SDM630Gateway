@@ -54,7 +54,7 @@ void ledMode(LedMode newMode) {
     ledOn = false;  updateTimeout = (unsigned long)(-1);
     digitalWrite( LED_Pin, HIGH );
   }
-//  Serial.printf("Mode %d: %lu / %lu\r\n", mode, timeoutOn, timeoutOff );
+//  printf("Mode %d: %lu / %lu\r\n", mode, timeoutOn, timeoutOff );
 }
 
 LedMode ledModeNext() {

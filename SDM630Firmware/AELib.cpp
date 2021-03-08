@@ -27,7 +27,7 @@ void Loop() {
   unsigned long t = millis();
   if(aelibMillis == 0 ) aelibMillis = t;
   if( (unsigned long)(t - aelibMillis) > 10000) {
-    Serial.print("loop time = ");Serial.print( ((double)(millis()-aelibMillis))/((double)aelibCount) ); Serial.println("ms");
+    print("loop time = ");print( ((double)(millis()-aelibMillis))/((double)aelibCount) ); println("ms");
     aelibMillis = t;
     aelibCount=0;
   } else {

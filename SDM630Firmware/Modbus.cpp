@@ -19,7 +19,7 @@ bool rangeCopyToData(Modbus::ResultCode event, uint16_t transactionId, void* dat
         sdm630Updated = millis();
     }
   } else {
-    //Serial.printf_P("ERROR %02X reading device #%d [%d..%d] \r\n", event, rangeSlaveId, (rangeFrom/2+1), (rangeFrom+rangeCount)/2+1 );
+    //printf_P("ERROR %02X reading device #%d [%d..%d] \r\n", event, rangeSlaveId, (rangeFrom/2+1), (rangeFrom+rangeCount)/2+1 );
   }
   rangeNo++;
   return true;

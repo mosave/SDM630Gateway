@@ -55,14 +55,14 @@ short int btnIndex( byte btnPin ) {
 
 #ifdef Debug
 void btnShowStatus( Btn* btn ) {
-  Serial.print( (strlen(btn->name)>0) ? btn->name : "Button" );
-  Serial.print(F(" #")); Serial.print(btn->pin); Serial.print(": "); 
-  if( btn->wasPressed ) Serial.print(F("wasPressed ")); 
-  if( btn->wasShortPressed ) Serial.print(F("wasShortPressed ")); 
-  if( btn->wasLongPressed ) Serial.print(F("wasLongPressed ")); 
-  if( btn->wasVeryLongPressed ) Serial.print(F("wasVeryLongPressed ")); 
-  if( btn->wasReleased ) Serial.print(F("wasReleased ")); 
-  Serial.println();
+  print( (strlen(btn->name)>0) ? btn->name : "Button" );
+  print(F(" #")); print(btn->pin); print(": "); 
+  if( btn->wasPressed ) print(F("wasPressed ")); 
+  if( btn->wasShortPressed ) print(F("wasShortPressed ")); 
+  if( btn->wasLongPressed ) print(F("wasLongPressed ")); 
+  if( btn->wasVeryLongPressed ) print(F("wasVeryLongPressed ")); 
+  if( btn->wasReleased ) print(F("wasReleased ")); 
+  println();
 }
 #endif
 
