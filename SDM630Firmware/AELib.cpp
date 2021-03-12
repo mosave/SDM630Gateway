@@ -27,7 +27,7 @@ void Loop() {
   unsigned long t = millis();
   if(aelibMillis == 0 ) aelibMillis = t;
   if( (unsigned long)(t - aelibMillis) > 10000) {
-    print("loop time = ");print( ((double)(millis()-aelibMillis))/((double)aelibCount) ); println("ms");
+    aePrint("loop time = ");aePrint( ((double)(millis()-aelibMillis))/((double)aelibCount) ); aePrintln("ms");
     aelibMillis = t;
     aelibCount=0;
   } else {

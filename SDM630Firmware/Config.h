@@ -19,9 +19,10 @@
 
 #define Btn0 16
 
-#define print(...) Serial.print( __VA_ARGS__ )
-#define printf(...) Serial.printf( __VA_ARGS__ )
-#define println(...) Serial.println( __VA_ARGS__ )
+// Define this to allow serial port output
+#define aePrintf( ... ) Serial.printf( __VA_ARGS__ )
+#define aePrint( ... ) Serial.print( __VA_ARGS__ )
+#define aePrintln( ... ) Serial.println( __VA_ARGS__ )
 
 #define LOOP std::function<void()>
 

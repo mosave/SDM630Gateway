@@ -85,7 +85,7 @@ void setup() {
   ledInit( On );
   Serial.begin(115200);
   delay(500); 
-  println();  println("Initializing");
+  aePrintln();  aePrintln("Initializing");
 
   storageInit();
   commsInit();

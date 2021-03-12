@@ -69,7 +69,7 @@ bool isChanged() {
   }
   if( changed ) {
 #ifdef Debug
-  println(F("Storage: changes detected"));
+  aePrintln(F("Storage: changes detected"));
 #endif
     storageMakeSnapshot();
     changedOn = millis();
@@ -82,7 +82,7 @@ void storageRead() {
   
   EEPROM.get( 0, storageSnapshot);
   if( (storageSnapshot[0] != 0x41) || (storageSnapshot[1] != 0x45) ) {
-    println(F("Storage reading error. Resetting"));
+    aePrintln(F("Storage reading error. Resetting"));
     memset( storageSnapshot, 0, STORAGE_Size );
     storageSnapshot[0] = 0x41;
     storageSnapshot[1] = 0x45;
@@ -119,7 +119,7 @@ void storageRegisterBlock(char id, void* data, unsigned short size ) {
 void storageSave() {
   storageInit();
   if( isChanged() ) {
-    println(F("Writing Storage"));
+    aePrintln(F("Writing Storage"));
     EEPROM.put( 0, storageSnapshot);
     EEPROM.commit();
     changedOn = 0;
@@ -162,7 +162,7 @@ void storageInit() {
 
 void storageReset() {
   storageInit(true);  
-  println(F("Clearing Storage"));
+  aePrintln(F("Clearing Storage"));
   memset( storageSnapshot, 0, sizeof(storageSnapshot) );
   delay(1000);;
   ESP.restart();

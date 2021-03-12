@@ -92,13 +92,13 @@ bool wifiEnabled() {
 }
 
 void wifiEnable(){
-  println(F("WIFI: Enabling"));
+  aePrintln(F("WIFI: Enabling"));
   commsConfig.disabled = false;
   commsRestart();
 }
 
 void wifiDisable(){
-  println(F("WIFI: Disabling"));
+  aePrintln(F("WIFI: Disabling"));
   mqttPublish( TOPIC_Online, (long)0, true );
   commsConfig.disabled = true;
   commsRestart();
@@ -113,10 +113,10 @@ void commsConnect() {
     commsRestart();
   }
   if( commsConnectAttempt>1 ) {
-    print(F("WIFI: Connecting, attempt ")); 
-    println(commsConnectAttempt);
+    aePrint(F("WIFI: Connecting, attempt ")); 
+    aePrintln(commsConnectAttempt);
   } else {
-    println(F("WIFI: Connecting")); 
+    aePrintln(F("WIFI: Connecting")); 
   }
   commsConnecting = millis();
   commsPaused = 0;
@@ -239,7 +239,7 @@ bool mqttPublish( char* TOPIC_Name, char* topicVar1, char* topicVar2, char* valu
 bool mqttPublishRaw( char* topic, char* value, bool retained ) {
   if( !mqttConnected() ) return false;
 #ifdef Debug  
-  print(F("Publish ")); print(topic); print(F("="));  println(value );
+  aePrint(F("Publish ")); aePrint(topic); aePrint(F("="));  aePrintln(value );
 #endif  
   return mqttClient.publish( topic, value, retained );
 }
@@ -266,7 +266,7 @@ void mqttCallbackProxy(char* topic, byte* payload, unsigned int length) {
   }
   
   if( mqttIsTopic( topic, TOPIC_Reset ) ) {
-    println(F("MQTT: Resetting by request"));
+    aePrintln(F("MQTT: Resetting by request"));
     commsRestart();
 
 #ifndef WIFI_HostName
@@ -276,7 +276,7 @@ void mqttCallbackProxy(char* topic, byte* payload, unsigned int length) {
       mqttTopic(topic, TOPIC_Online);
       memset( commsConfig.hostName, 0, sizeof(commsConfig.hostName) );
       strncpy( commsConfig.hostName, ((char*)payload), length );
-      print(F("MQTT: Device name set to ")); println(commsConfig.hostName);
+      aePrint(F("MQTT: Device name set to ")); aePrintln(commsConfig.hostName);
       
       mqttPublishRaw( topic, (long)0, true );
       commsRestart();
@@ -289,7 +289,7 @@ void mqttCallbackProxy(char* topic, byte* payload, unsigned int length) {
       mqttTopic(topic, TOPIC_Online);
       strncpy( commsConfig.mqttRoot, ((char*)payload),length);
       commsConfig.mqttRoot[length]=0;
-      print(F("MQTT: Device root set to ")); println(commsConfig.mqttRoot);
+      aePrint(F("MQTT: Device root set to ")); aePrintln(commsConfig.mqttRoot);
       storageSave();
       mqttPublishRaw( topic, (long)0, true );
       commsRestart();
@@ -314,9 +314,9 @@ void commsLoop() {
   if (WiFi.status() == WL_CONNECTED) {  // WiFi is already connected
     if( commsConnecting >0 ) {
       commsConnecting = 0;
-      print(F("WIFI: Connected as ")); print( WiFi.hostname() ); print(F("/")); println( WiFi.localIP() );
+      aePrint(F("WIFI: Connected as ")); aePrint( WiFi.hostname() ); aePrint(F("/")); aePrintln( WiFi.localIP() );
       if( !MDNS.begin(commsConfig.hostName) ) {
-        println(F("MDNQ: begin() failed"));
+        aePrintln(F("MDNQ: begin() failed"));
       }
       return; // Split activity to not overload loop
     }
@@ -326,28 +326,28 @@ void commsLoop() {
       if( (unsigned long)(t - otaEnabled) < CONFIG_Timeout  ) {
         if( otaShouldInit ) {
           otaShouldInit = false;
-          println(F("OTA: Enabling OTA"));
+          aePrintln(F("OTA: Enabling OTA"));
           ArduinoOTA.setHostname(commsConfig.hostName);
           ArduinoOTA.setPassword(WIFI_Password);
           ArduinoOTA.onStart([]() {
             mqttPublish( TOPIC_Online, (long)0, true );
-            println(F("OTA: Updating firmware"));
+            aePrintln(F("OTA: Updating firmware"));
             storageSave();
             LittleFS.end();
           });
           ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-            print(F("."));
+            aePrint(F("."));
             otaProgress++;
             if(otaProgress>=100) {
               otaProgress = 0; 
-              println();
+              aePrintln();
             }
           });
           ArduinoOTA.onEnd([]() {
-            println(F("\nOTA: Firmware updated. Restarting"));
+            aePrintln(F("\nOTA: Firmware updated. Restarting"));
           });
           ArduinoOTA.onError([](ota_error_t error) {
-            println(F("OTA: Error updating firmware. Restarting\r"));
+            aePrintln(F("OTA: Error updating firmware. Restarting\r"));
             commsRestart();
           });      
           ArduinoOTA.begin();
@@ -357,7 +357,7 @@ void commsLoop() {
         }
       } else {
         mqttPublish( TOPIC_Online, (long)0, true );
-        println(F("OTA: Timeout waiting for update. Restarting"));
+        aePrintln(F("OTA: Timeout waiting for update. Restarting"));
         commsRestart();
       }
     }
@@ -374,7 +374,7 @@ void commsLoop() {
       
     } else {
       if( wasConnected ) {
-        println(F("MQTT: Connection lost"));
+        aePrintln(F("MQTT: Connection lost"));
         wasConnected = false;
       }
       if( commsPaused == 0 ) {
@@ -383,12 +383,12 @@ void commsLoop() {
         
         char willTopic[63];
         mqttTopic( willTopic, "" );
-        print(F("MQTT: Connecting as ")); println(willTopic);
+        aePrint(F("MQTT: Connecting as ")); aePrintln(willTopic);
         
         mqttTopic( willTopic, TOPIC_Online );
         if( mqttClient.connect( commsConfig.hostName, willTopic, 0, true, "0" ) ) {
           commsConnectAttempt = 0;
-          println(F("MQTT: Connected"));
+          aePrintln(F("MQTT: Connected"));
           // Subscribe
           mqttSubscribeTopic( TOPIC_Reset );
           mqttSubscribeTopic( TOPIC_EnableOTA );
@@ -414,7 +414,7 @@ void commsLoop() {
           commsPaused = 0;
           wasConnected = true;
         } else {
-          print(F("MQTT: Connection error #")); println( mqttClient.state() );
+          aePrint(F("MQTT: Connection error #")); aePrintln( mqttClient.state() );
           commsPaused = t;
         }
         return; // Split activity to not overload loop
@@ -427,14 +427,14 @@ void commsLoop() {
 
   } else {
     if( (unsigned long)(t - commsConnecting) > COMMS_ConnectTimeout ) {
-      print(F("WIFI: Connection error #")); println(WiFi.status());
+      aePrint(F("WIFI: Connection error #")); aePrintln(WiFi.status());
       commsReconnect();
     }
   }
 }
 
 void commsEnableOTA() {
-  println(F("OTA: Enabled"));
+  aePrintln(F("OTA: Enabled"));
   if( otaEnabled == 0 ) {
     otaShouldInit = true;
   }
@@ -443,7 +443,7 @@ void commsEnableOTA() {
 
 void commsRestart() {
   storageSave();
-  println(F("Restarting device..."));
+  aePrintln(F("Restarting device..."));
   mqttPublish( TOPIC_Online, (long)0, true );
   delay(1000);;
   ESP.restart();

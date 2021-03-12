@@ -55,14 +55,14 @@ short int btnIndex( byte btnPin ) {
 
 #ifdef Debug
 void btnShowStatus( Btn* btn ) {
-  print( (strlen(btn->name)>0) ? btn->name : "Button" );
-  print(F(" #")); print(btn->pin); print(": "); 
-  if( btn->wasPressed ) print(F("wasPressed ")); 
-  if( btn->wasShortPressed ) print(F("wasShortPressed ")); 
-  if( btn->wasLongPressed ) print(F("wasLongPressed ")); 
-  if( btn->wasVeryLongPressed ) print(F("wasVeryLongPressed ")); 
-  if( btn->wasReleased ) print(F("wasReleased ")); 
-  println();
+  aePrint( (strlen(btn->name)>0) ? btn->name : "Button" );
+  aePrint(F(" #")); aePrint(btn->pin); aePrint(": "); 
+  if( btn->wasPressed ) aePrint(F("wasPressed ")); 
+  if( btn->wasShortPressed ) aePrint(F("wasShortPressed ")); 
+  if( btn->wasLongPressed ) aePrint(F("wasLongPressed ")); 
+  if( btn->wasVeryLongPressed ) aePrint(F("wasVeryLongPressed ")); 
+  if( btn->wasReleased ) aePrint(F("wasReleased ")); 
+  aePrintln();
 }
 #endif
 
