@@ -11,6 +11,8 @@ enum BtnDefaultFunction {
 void btnRegister( byte btnPin, char* mqttName, bool btnInverted, bool pullUp);
 void btnDefaultFunction( byte btnPin, BtnDefaultFunction bdf );
 
+char* btnName( byte btnPin );
+
 bool btnState( byte btnPin );
 bool btnPressed( byte btnPin );
 bool btnShortPressed( byte btnPin );

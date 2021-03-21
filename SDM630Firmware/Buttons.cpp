@@ -146,6 +146,11 @@ void btnDefaultFunction( byte btnPin, BtnDefaultFunction bdf ) {
   if( index>=0 ) buttons[index].bdf = bdf;
 }
 
+char* btnName( byte btnPin ) {
+  short int index = btnIndex(btnPin);
+  return (index>=0) ? buttons[index].name : NULL;
+}
+
 bool btnState( byte btnPin ) {
   short int index = btnIndex(btnPin);
   return ( (index>=0) && buttons[index].pressed );
