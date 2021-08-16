@@ -1,5 +1,8 @@
 #ifndef buttons_h
 #define buttons_h
+#include "Config.h"
+
+
 enum BtnDefaultFunction {
   BDF_None, // none
   BDF_EnableOTA, // enable OTA on 10th fast click
@@ -15,18 +18,21 @@ char* btnName( byte btnPin );
 
 bool btnState( byte btnPin );
 bool btnPressed( byte btnPin );
+bool btnReleased( byte btnPin );
 bool btnShortPressed( byte btnPin );
 bool btnLongPressed( byte btnPin );
+#ifndef ButtonsEasyMode
 bool btnVeryLongPressed( byte btnPin );
-bool btnReleased( byte btnPin );
+#endif
 
 bool btnState( byte btnPin, byte btnPin2 );
 bool btnPressed( byte btnPin, byte btnPin2 );
+bool btnReleased( byte btnPin, byte btnPin2 );
 bool btnShortPressed( byte btnPin, byte btnPin2 );
 bool btnLongPressed( byte btnPin, byte btnPin2 );
+#ifndef ButtonsEasyMode
 bool btnVeryLongPressed( byte btnPin, byte btnPin2 );
-bool btnReleased( byte btnPin, byte btnPin2 );
-
+#endif
 
 void btnInit();
 #endif

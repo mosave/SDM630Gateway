@@ -1,8 +1,13 @@
+#ifdef ESP8266
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+#include <LittleFS.h>
+#else
+#include <WiFi.h>
+#include <ESPmDNS.h>
+#endif
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
-#include <LittleFS.h>
 #include "Config.h"
 #include "Comms.h"
 #include "Storage.h"
@@ -13,12 +18,20 @@
   #define MQTT_MDNS
   #define mqttMdnsSize 4
 
-struct mqttMdnsRecord {
-  char address[16];
-  uint16 port;
-};
-mqttMdnsRecord mqttMdns[mqttMdnsSize];
+  struct mqttMdnsRecord {
+    char address[16];
+    uint16_t port;
+  };
+  mqttMdnsRecord mqttMdns[mqttMdnsSize];
 #endif
+
+#ifdef TIMEZONE
+  #include "TZ.h"
+  #include <time.h>
+  static char* NTP_SERVER1 PROGMEM = "time.google.com";
+  static char* NTP_SERVER2 PROGMEM = "time.nist.gov";
+#endif
+
 
 //#define Debug
 
@@ -28,7 +41,7 @@ mqttMdnsRecord mqttMdns[mqttMdnsSize];
 // Number of connection attempts before resetting controller
 #define COMMS_ConnectAttempts 1000000
 // Time to wait between RSSI reports
-#define COMMS_RSSITimeout ((unsigned long)(10 * 1000))
+#define COMMS_RSSITimeout ((unsigned long)(60 * 1000))
 
 #define MQTT_ActivityTimeout ((unsigned long)(10 * 1000))
 #define MQTT_CbsSize 10
@@ -45,6 +58,7 @@ static char* TOPIC_Address PROGMEM = "Address";
 static char* TOPIC_RSSI PROGMEM = "RSSI";
 static char* TOPIC_Activity PROGMEM = "Activity";
 static char* TOPIC_Reset PROGMEM = "Reset";
+static char* TOPIC_FactoryReset PROGMEM = "FactoryReset";
 static char* TOPIC_EnableOTA PROGMEM = "EnableOTA";
 #ifndef WIFI_HostName
 static char* TOPIC_SetName PROGMEM = "SetName";
@@ -74,7 +88,6 @@ struct CommsConfig {
 unsigned long commsConnecting;
 unsigned long commsConnectAttempt = 0;
 unsigned long commsPaused;
-unsigned long commsRssiReported;
 unsigned long commsPauseTimeout = COMMS_ConnectTimeout;
 
 int mqttMdnsIndex = 0;
@@ -86,6 +99,7 @@ unsigned int otaProgress;
 
 unsigned long mqttActivity;
 bool mqttDisableCallback = false;
+char mqttServerAddress[32]="";
 
 WiFiClient wifiClient;
 PubSubClient mqttClient( wifiClient );
@@ -179,6 +193,9 @@ void commsReconnect() {
 //**************************************************************************
 bool mqttConnected() {
   return mqttClient.connected();
+}
+char* mqttServer() {
+  return mqttServerAddress;
 }
 char* mqttTopic( char* buffer, char* TOPIC_Name ) {
   return mqttTopic( buffer, TOPIC_Name, NULL, NULL );
@@ -279,7 +296,6 @@ void mqttRegisterCallbacks( MQTT_CALLBACK, MQTT_CONNECT ) {
   mqttCbsCount++;
 }
 
-
 // Internal proxy function to process "default" topics
 void mqttCallbackProxy(char* topic, byte* payload, unsigned int length) {
   if( mqttDisableCallback ) return;
@@ -293,6 +309,10 @@ void mqttCallbackProxy(char* topic, byte* payload, unsigned int length) {
   if( mqttIsTopic( topic, TOPIC_Reset ) ) {
     aePrintln(F("MQTT: Resetting by request"));
     commsClearTopicAndRestart( TOPIC_Reset );
+  } else if( mqttIsTopic( topic, TOPIC_FactoryReset ) ) {
+    aePrintln(F("MQTT: Resetting settings"));
+    storageReset();
+    commsClearTopicAndRestart( TOPIC_FactoryReset );
 
 #ifndef WIFI_HostName
   } else if( mqttIsTopic( topic, TOPIC_SetName ) ) {
@@ -333,16 +353,27 @@ void mqttCallbackProxy(char* topic, byte* payload, unsigned int length) {
 void commsLoop() {
 
   if( commsConfig.disabled ) return;
+
+  static bool wasConnected = false;
+  static unsigned long onlineReported = 0;
+  static unsigned long rssiReported = 0;
   
   unsigned long t = millis();
   // Check if connection is not timed out
   if (WiFi.status() == WL_CONNECTED) {  // WiFi is already connected
     if( commsConnecting >0 ) {
       commsConnecting = 0;
-      aePrint(F("WIFI: Connected as ")); aePrint( WiFi.hostname() ); aePrint(F("/")); aePrintln( WiFi.localIP() );
+      aePrint(F("WIFI: Connected as ")); 
+#ifdef ESP8266
+      aePrint( WiFi.hostname() ); 
+#else
+      aePrint(WiFi.getHostname());
+#endif
+      aePrint(F("/")); aePrintln( WiFi.localIP() );
       if( !MDNS.begin(commsConfig.hostName) ) {
         aePrintln(F("MDNQ: begin() failed"));
       }
+
       return; // Split activity to not overload loop
     }
 
@@ -358,21 +389,15 @@ void commsLoop() {
             mqttPublish( TOPIC_Online, (long)0, true );
 //            aePrintln(F("OTA: Updating firmware"));
             storageSave();
+#ifdef LittleFS
             LittleFS.end();
-          });
-          ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-//            aePrint(F("."));
-//            otaProgress++;
-//            if(otaProgress>=100) {
-//              otaProgress = 0; 
-//              aePrintln();
-//            }
+#endif
           });
           ArduinoOTA.onEnd([]() {
             aePrintln(F("\nOTA: Firmware updated. Restarting"));
           });
           ArduinoOTA.onError([](ota_error_t error) {
-            aePrintln(F("OTA: Error updating firmware. Restarting\r"));
+            aePrint(F("OTA: Error #")); aePrint( error ); aePrintln(F(" updating firmware. Restarting"));
             commsRestart();
           });      
           ArduinoOTA.begin();
@@ -386,7 +411,6 @@ void commsLoop() {
         commsRestart();
       }
     }
-    static bool wasConnected = false;
     
     // Handle MQTT connection and loops
     if( mqttClient.loop() ) {
@@ -397,10 +421,25 @@ void commsLoop() {
         activityReported = a;
       }
 
-      if( (unsigned long)(t - commsRssiReported) > COMMS_RSSITimeout ) {
-        char s[16];
-        sprintf(s, "%d",(int)WiFi.RSSI());
-        if( mqttPublish( TOPIC_RSSI, s, false ) ) commsRssiReported = t;
+      if( (unsigned long)(t - rssiReported) > ((unsigned long)5000) ) {
+        static int32_t _rssi = 9999;
+        int32_t rssi = WiFi.RSSI();
+        int d = ((int)(rssi-_rssi));
+        if( d<0 ) d = -d;
+        if( (((unsigned long)(t - rssiReported) > COMMS_RSSITimeout) && (d>5)) || (d>20) ) {
+          char s[16];
+          sprintf(s, "%d",rssi);
+          if( mqttPublish( TOPIC_RSSI, s, false ) ) {
+            rssiReported = t;
+            _rssi = rssi;
+          }
+        }
+      }
+
+      // Report online status every 10 minutes
+      if( (unsigned long)(t - onlineReported) > ((unsigned long)600000) ) {
+        onlineReported = t;
+        mqttPublish( TOPIC_Online, (long)1, true );
       }
 
 
@@ -430,6 +469,7 @@ void commsLoop() {
         if( mqttMdnsCnt>0 ) {
           aePrintf("MQTT: Connecting broker #%d %s:%d\r\n", mqttMdnsIndex, mqttMdns[mqttMdnsIndex].address, mqttMdns[mqttMdnsIndex].port );
           mqttClient.setServer( mqttMdns[mqttMdnsIndex].address, mqttMdns[mqttMdnsIndex].port );
+          strcpy( mqttServerAddress, mqttMdns[mqttMdnsIndex].address );
           mqttMdnsIndex++;
           if( mqttMdnsIndex>=mqttMdnsCnt ) {
             mqttMdnsCnt = 0;
@@ -440,6 +480,7 @@ void commsLoop() {
         }
 #else
         mqttClient.setServer( MQTT_Address, MQTT_Port);
+        strcpy( mqttServerAddress, MQTT_Address );
 #endif
 
         mqttClient.setCallback( mqttCallbackProxy );
@@ -452,8 +493,15 @@ void commsLoop() {
         if( tryConnect && mqttClient.connect( commsConfig.hostName, willTopic, 0, true, "0" ) ) {
           commsConnectAttempt = 0;
           aePrintln(F("MQTT: Connected"));
+#ifdef TIMEZONE
+          // adjust time zone
+            configTime( TIMEZONE, mqttServerAddress, NTP_SERVER1, NTP_SERVER2 );
+            tzset();
+#endif  
+          
           // Subscribe
           mqttSubscribeTopic( TOPIC_Reset );
+          mqttSubscribeTopic( TOPIC_FactoryReset );
           mqttSubscribeTopic( TOPIC_EnableOTA );
 #ifndef WIFI_HostName
           mqttSubscribeTopic( TOPIC_SetName );
@@ -463,6 +511,7 @@ void commsLoop() {
           mqttSubscribeTopic( TOPIC_SetRoot );
 #endif  
           mqttPublish( TOPIC_Online, (long)1, true );
+          onlineReported = t;
 #ifdef VERSION
           mqttPublish( TOPIC_Version, VERSION, true  );
 #endif
@@ -509,7 +558,7 @@ void commsEnableOTA() {
     otaShouldInit = true;
   }
   otaEnabled = millis();
-  Serial.end();
+  //Serial.end();
 }
 
 void commsRestart() {
@@ -538,7 +587,6 @@ void commsInit() {
   commsPaused = 0;
   mqttActivity = 0;
   storageRegisterBlock( COMMS_StorageId, &commsConfig, sizeof(commsConfig) );
-
 #ifdef WIFI_HostName
   uint8_t macAddr[6];
   char macS[16];

@@ -1,6 +1,10 @@
 #ifndef comms_h
 #define comms_h
 
+#ifndef std::function
+#include <functional>
+#endif
+
 #define MQTT_CALLBACK std::function<bool(char*, uint8_t*, unsigned int)> callback
 #define MQTT_CONNECT std::function<void()> connect
 
@@ -13,6 +17,7 @@ void wifiEnable();
 void wifiDisable();
 
 // MQTT
+char* mqttServer();
 bool mqttConnected();
 
 // All these functions treat TOPIC_Name as template and complete it with MQTT_Root, mqttClientId and optional variables (if passed)

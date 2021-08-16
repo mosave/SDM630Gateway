@@ -10,7 +10,9 @@ enum LedMode {
   BlinkSlow,
   BlinkSlowInverted,
   Standby,
+#ifdef ESP8266
   Glowing,
+#endif
   On
 };
 

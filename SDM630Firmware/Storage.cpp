@@ -28,7 +28,7 @@ unsigned long changedOn = 0;
 // Returns byte index in storageSnapshot array or -1 if not found
 void* storageSnapshotFind(char id ) {
   if( (storageSnapshot[0] == 0x41) && (storageSnapshot[1] == 0x45) ) {
-    void* p = storageSnapshot + 2;
+    byte* p = storageSnapshot + 2;
     while( p < (storageSnapshot + STORAGE_Size) ) {
       StorageSnapshotHeader* header = (StorageSnapshotHeader*)p;
       p += sizeof(StorageSnapshotHeader);
@@ -47,7 +47,7 @@ void storageMakeSnapshot(){
   memset( storageSnapshot, 0, STORAGE_Size );
   storageSnapshot[0] = 0x41; storageSnapshot[1] = 0x45;
 
-  void* p = &storageSnapshot[2];
+  byte* p = &storageSnapshot[2];
   for( int i = 0; (i<storageBlockCount) && (p<(storageSnapshot+STORAGE_Size)); i++) {
     StorageSnapshotHeader* header = (StorageSnapshotHeader*)p;
     p+=sizeof(StorageSnapshotHeader);
@@ -82,7 +82,6 @@ void storageRead() {
   
   EEPROM.get( 0, storageSnapshot);
   if( (storageSnapshot[0] != 0x41) || (storageSnapshot[1] != 0x45) ) {
-    aePrintln(F("Storage reading error. Resetting"));
     memset( storageSnapshot, 0, STORAGE_Size );
     storageSnapshot[0] = 0x41;
     storageSnapshot[1] = 0x45;
@@ -144,16 +143,22 @@ void storageLoop() {
 // Initialize library and crear storage block
 void storageInit( bool reset ) {
   static bool initialized = false;
-  if( initialized ) return;
-  initialized = true;
-  EEPROM.begin( STORAGE_Size );
+  if( !initialized ) {
+    EEPROM.begin( STORAGE_Size );
+    registerLoop(storageLoop);
+  }
+
   if( reset ) {
     memset( storageSnapshot, 0, sizeof(storageSnapshot) );
+    EEPROM.put( 0, storageSnapshot);
+    EEPROM.commit();
     changedOn = 0;
-  } else {
+  }
+  
+  if( !initialized ) {
+    initialized = true;
     storageRead();
   }
-  registerLoop(storageLoop);
 }
 
 void storageInit() {
@@ -161,9 +166,11 @@ void storageInit() {
 }
 
 void storageReset() {
-  storageInit(true);  
   aePrintln(F("Clearing Storage"));
+  storageInit();
   memset( storageSnapshot, 0, sizeof(storageSnapshot) );
-  delay(1000);;
+  EEPROM.put( 0, storageSnapshot);
+  EEPROM.commit();
+  delay(1000);
   ESP.restart();
 }
